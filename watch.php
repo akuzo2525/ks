@@ -30,7 +30,9 @@ function get_nicohistory($video_id, $user_session)
 	return $nicohistory;
 }
 
-	$video_id = "sm31767145";
+function watch($video_id)
+{
+	global $host, $user, $pass, $db, $tb;
 
 	$mysqli = new mysqli($host, $user, $pass, $db);
 	if($mysqli->connect_errno)
@@ -39,7 +41,7 @@ function get_nicohistory($video_id, $user_session)
 	}
 	$mysqli->query("set names utf8") or die($mysqli->error);
 
-	$query = "SELECT * FROM $db.$tb limit 2";
+	$query = "SELECT * FROM $db.$tb";
 	$result = $mysqli->query($query) or die($mysqli->error);
 	while($row = $result->fetch_assoc())
 	{
@@ -60,6 +62,9 @@ function get_nicohistory($video_id, $user_session)
 			echo "$query\n";
 			$mysqli->query($query) or die($mysqli->error);
 		}
-		echo "#$nicohistory#\n";
+	//	echo "#$nicohistory#\n";
 	}
+	$mysqli->close();
+}
+
 ?>
