@@ -67,4 +67,81 @@ function watch($video_id)
 	$mysqli->close();
 }
 
+$mysqli = new mysqli("14.39.90.172", "nico", "", "ks", 6306);
+if($mysqli->connect_errno)
+{
+	die($mysqli->connect_error);
+}
+$mysqli->query("set names utf8") or die($mysqli->error);
+
+$file = file_get_contents("http://www.nicovideo.jp/ranking/fav/daily/dance");
+if(!$file)
+{
+	dir("read error $url");
+}
+
+preg_match_all('/<li class="item videoRanking.*?<\/div>\s*<\/li>/s', $file, $data);
+$n = count($data[0]);
+if($n != 100)
+{
+	dir("#$n");
+}
+else
+{
+	$pat  = '/.*?';
+	$pat .= 'data-id="(.*?)".*?';
+	$pat .= '<p class="rankingPt">(.*?)<\/p>.*?';
+	$pat .= '<p class="itemTime(.*?)"> <span>(.*?)<\/span>.*?<\/p>.*?'
+	       .'data-original="(.*?)".*?'
+	       .'(<a title=".*?".*?<\/a>).*?'		// 6
+	       .'view">.*?([0-9,]*)<\/span>.*?'		// 7
+	       .'comment">.*?([0-9,]*)<\/span>.*?'	// 8
+	       .'mylist">.*?([0-9,]*)<\/a>.*?'	// 9
+	       .'/s';
+
+	for($i = 0; $i < $n; $i++)
+	{
+		preg_match($pat, $data[0][$i], $res);
+		if(count($res) > 0)
+		{
+			$id = $res[1];
+			$pt = (int)str_replace(',', '', $res[2]);
+			$view = str_replace(',', '', $res[7]);
+			$comment = str_replace(',', '', $res[8]);
+			$mylist = str_replace(',', '', $res[9]);
+
+			$query = "SELECT flag,skip,black FROM v WHERE video_id='$id'";
+			$result = $mysqli->query($query);
+
+			if($row = $result->fetch_assoc())
+			{
+				$flag = $row['flag'];
+				$skip = $row['skip'];
+				$black = $row['black'];
+			}
+			else
+			{
+				$flag = 0;
+				$black = false;
+			}
+
+			if($black == false)
+			{
+				$stat = (($flag&15) > 0) ? 'o' : '.';
+			}
+			else
+			{
+				$stat = '-';
+			}
+
+			{
+				echo sprintf("%3d %s %7s %7s %s\n", $i+1, $stat, $pt, $view, $id);
+			}
+		}
+	}
+
+//	$result->free();
+	$mysqli->close();
+}
+
 ?>
