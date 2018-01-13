@@ -47,8 +47,7 @@ if(count($argv) >= 2)
 			break;
 		case 'u':
 			$mysqli->close();
-			$port = 3306;
-			$mysqli = new mysqli($host, $user, "", $db, $port);
+			$mysqli = new mysqli($host, $user, "", $db);
 			$result = $mysqli->query("SELECT mail, password FROM $acc_db");
 			$u = array();
 			while($row = $result->fetch_row())
@@ -60,9 +59,8 @@ if(count($argv) >= 2)
 			break;
 		case 's':
 			$mysqli->close();
-			$port = 3306;
-			$mysqli = new mysqli($host, $user, "", $db, $port);
-			$result = $mysqli->query("SELECT user_session, UNIX_TIMESTAMP(timestamp) FROM $acc_db WHERE id>=$min AND id<=$max");
+			$mysqli = new mysqli($host, $user, "", $db);
+			$result = $mysqli->query("SELECT user_session, UNIX_TIMESTAMP(timestamp) FROM $acc_db");
 			$s = array();
 			while($row = $result->fetch_row())
 			{
