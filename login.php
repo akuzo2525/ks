@@ -1,10 +1,11 @@
 <?php
+
 function login($mail, $password)
 {
 	$url = "https://secure.nicovideo.jp/secure/login?site=niconico";
 	$data = http_build_query(array('next_url'=>"", 'mail'=>$mail, 'password'=>$password, 'submit'=>""));
-	$option = array('http'=>array('method'=>"POST", 'header'=>"Content-Type: application/x-www-form-urlencoded\r\nAccept-language: ja\r\n", 'content'=>$data));
-	$context = stream_context_create($option);
+	$options = array('http'=>array('method'=>"POST", 'header'=>"Content-Type: application/x-www-form-urlencoded\r\nAccept-language: ja\r\n", 'content'=>$data));
+	$context = stream_context_create($options);
 	file_get_contents($url, false, $context);
 
 	foreach($http_response_header as $res)
@@ -15,6 +16,7 @@ function login($mail, $password)
 			return $tmp[1];
 		}
 	}
-	return "";
+	return '';
 }
+
 ?>
