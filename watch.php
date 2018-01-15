@@ -74,74 +74,74 @@ if($mysqli->connect_errno)
 }
 $mysqli->query("set names utf8") or die($mysqli->error);
 
-$file = file_get_contents("http://www.nicovideo.jp/ranking/fav/daily/dance");
-if(!$file)
+$xmlstr = file_get_contents("http://www.nicovideo.jp/ranking/fav/daily/dance?rss=2.0&lang=ja-jp");
+//$xmlstr = file_get_contents("./a.xml");
+//file_put_contents("./a.xml", $xmlstr);
+if(!$xmlstr)
 {
 	dir("read error $url");
 }
+$xml = new SimpleXMLElement($xmlstr);
+echo $xml->channel->title."\n";
+echo $xml->channel->link."\n";
+echo $xml->channel->pubDate."\n";
 
-preg_match_all('/<li class="item videoRanking.*?<\/div>\s*<\/li>/s', $file, $data);
-$n = count($data[0]);
-if($n != 100)
+$n = 0;
+foreach($xml->channel->item as $item)
 {
-	dir("#$n");
-}
-else
-{
-	$pat  = '/.*?';
-	$pat .= 'data-id="(.*?)".*?';
-	$pat .= '<p class="rankingPt">(.*?)<\/p>.*?';
-	$pat .= '<p class="itemTime(.*?)"> <span>(.*?)<\/span>.*?<\/p>.*?'
-	       .'data-original="(.*?)".*?'
-	       .'(<a title=".*?".*?<\/a>).*?'		// 6
-	       .'view">.*?([0-9,]*)<\/span>.*?'		// 7
-	       .'comment">.*?([0-9,]*)<\/span>.*?'	// 8
-	       .'mylist">.*?([0-9,]*)<\/a>.*?'	// 9
-	       .'/s';
+	$n++;
+//	if($n > 4)break;
+	$title = $item->title;
+	$guid = $item->guid;
+	$description = $item->description;
 
-	for($i = 0; $i < $n; $i++)
+	$pattern = '|.*:/watch/(.*)|';
+	if(preg_match($pattern, $guid, $matches) !== 1)
 	{
-		preg_match($pat, $data[0][$i], $res);
-		if(count($res) > 0)
-		{
-			$id = $res[1];
-			$pt = (int)str_replace(',', '', $res[2]);
-			$view = str_replace(',', '', $res[7]);
-			$comment = str_replace(',', '', $res[8]);
-			$mylist = str_replace(',', '', $res[9]);
+		continue;
+	}
+	$id = $matches[1];
 
-			$query = "SELECT flag,skip,black FROM v WHERE video_id='$id'";
-			$result = $mysqli->query($query);
+	$pattern = '|<strong class="nico-info-(.*?)">(.*?)</strong>|';
+	$cnt = preg_match_all($pattern, $description, $matches);
+	if($cnt < 9)continue;
+	$pt      = (int)str_replace(',', '', $matches[2][0]);
+	$date    = $matches[2][2];
+	$view    = (int)str_replace(',', '', $matches[2][3]);
 
-			if($row = $result->fetch_assoc())
-			{
-				$flag = $row['flag'];
-				$skip = $row['skip'];
-				$black = $row['black'];
-			}
-			else
-			{
-				$flag = 0;
-				$black = false;
-			}
+	if(preg_match_all('|\d+|', $date, $matches) !== 6)continue;
+	$date = sprintf("%04d-%02d-%02d %02d:%02d:%02d", $matches[0][0], $matches[0][1], $matches[0][2], $matches[0][3], $matches[0][4], $matches[0][5]);
+	$time = strtotime($date);
+	$new = (time()-$time)/60/60 <= 24;
 
-			if($black == false)
-			{
-				$stat = (($flag&15) > 0) ? 'o' : '.';
-			}
-			else
-			{
-				$stat = '-';
-			}
+	$query = "SELECT flag,skip,black FROM v WHERE video_id='$id'";
+	$result = $mysqli->query($query);
 
-			{
-				echo sprintf("%3d %s %7s %7s %s\n", $i+1, $stat, $pt, $view, $id);
-			}
-		}
+	if($row = $result->fetch_assoc())
+	{
+		$flag = $row['flag'];
+		$skip = $row['skip'];
+		$black = $row['black'];
+	}
+	else
+	{
+		$flag = 0;
+		$black = false;
 	}
 
-//	$result->free();
-	$mysqli->close();
+	if($black == false)
+	{
+		$stat = (($flag&15) > 0) ? 'o' : '.';
+	}
+	else
+	{
+		$stat = '-';
+	}
+
+	echo sprintf("%3d %s %7s %7s %s $title\n", $n, $stat, $pt, $view, $id);
 }
+
+$result->free();
+$mysqli->close();
 
 ?>
