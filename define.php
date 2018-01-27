@@ -10,6 +10,6 @@ $port = 6306;
 $user = 'nico';
 $db = 'ks';
 $tb = 'v';
-$acc_db = 'ks.acc';
+$acc_db = 'nico.account';
 
 ?>

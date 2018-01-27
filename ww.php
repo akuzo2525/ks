@@ -46,9 +46,7 @@ if(count($argv) >= 2)
 			file_put_contents('v', serialize($v));
 			break;
 		case 'u':
-			$mysqli->close();
-			$mysqli = new mysqli($host, $user, "", $db);
-			$result = $mysqli->query("SELECT mail, password FROM $acc_db");
+			$result = $mysqli->query("SELECT mail, password FROM $acc_db where id>=$min AND id<=$max");
 			$u = array();
 			while($row = $result->fetch_row())
 			{
@@ -58,9 +56,7 @@ if(count($argv) >= 2)
 			file_put_contents('u', serialize($u));
 			break;
 		case 's':
-			$mysqli->close();
-			$mysqli = new mysqli($host, $user, "", $db);
-			$result = $mysqli->query("SELECT user_session, UNIX_TIMESTAMP(timestamp) FROM $acc_db");
+			$result = $mysqli->query("SELECT user_session, UNIX_TIMESTAMP(timestamp) FROM $acc_db where id>=$min AND id<=$max");
 			$s = array();
 			while($row = $result->fetch_row())
 			{
@@ -91,7 +87,8 @@ $rnd = isset($_POST['rnd']);
 //	echo "cnt=$n\n";
 //	foreach($v as $val)echo $val."\n";
 //	foreach($u as $val)echo sprintf("%s:%s\n", $val['m'], $val['p']);
-//	foreach($s as $val)echo sprintf("u>>%s:%2d:%d\n", $val['s'], $val['c'], $val['t']);
+//	foreach($s as $val)echo sprintf("%s:%2d:%d\n", $val['s'], $val['c'], $val['t']);
+//	foreach($s as $val)echo sprintf("%s:%2d:%s\n", $val['s'], $val['c'], date("m-d H:i:s", $val['t']));
 }
 
 if($rnd === true)
