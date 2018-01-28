@@ -1,6 +1,8 @@
 <?php
 
+require "./define.php";
 require "./login.php";
+require "./watchlib.php";
 
 $host = "127.0.0.1";
 $port = 3306;
@@ -9,7 +11,7 @@ $pass = "";
 $db = "ks";
 $tb = "acc";
 
-function get_nicohistory($video_id, $user_session)
+function _get_nicohistory($video_id, $user_session)
 {
 	$url = "http://nicovideo.jp/watch/$video_id";
 	$options = array('http'=>array('method'=>"HEAD", 'header'=>"Accept-language: ja\r\nCookie: user_session=$user_session\r\n"));
@@ -30,41 +32,28 @@ function get_nicohistory($video_id, $user_session)
 	return $nicohistory;
 }
 
-function watch($video_id)
+function watch($id, $video_id)
 {
-	global $host, $user, $pass, $db, $tb;
+	global $u, $s;
 
-	$mysqli = new mysqli($host, $user, $pass, $db);
-	if($mysqli->connect_errno)
-	{
-		dir($mysqli->connect_error."\n");
-	}
-	$mysqli->query("set names utf8") or die($mysqli->error);
+	$id++;
+	if($id >= count($u))$id = 0;
 
-	$query = "SELECT * FROM $db.$tb";
-	$result = $mysqli->query($query) or die($mysqli->error);
-	while($row = $result->fetch_assoc())
 	{
-		$mail = $row['mail'];
-		$password = $row['password'];
-		$user_session = $row['user_session'];
-		echo "$mail\n";
-		$nicohistory = get_nicohistory($video_id, $user_session);
-		if($nicohistory === "")
+		$mail = $u[$id]['m'];
+		$password = $u[$id]['p'];
+		$user_session = $s[$id]['s'];
+	//	echo "$video_id $mail\n";
+		if(get_nicohistory($video_id, $user_session) === false)
 		{
 			$user_session = login($mail, $password);
-			$nicohistory = get_nicohistory($video_id, $user_session);
-			if($nicohistory === "")
+			if(get_nicohistory($video_id, $user_session) === false)
 			{
 				exit("login error");
 			}
-			$query = "UPDATE $db.$tb SET user_session='$user_session' WHERE mail='$mail'";
-			echo "$query\n";
-			$mysqli->query($query) or die($mysqli->error);
 		}
-	//	echo "#$nicohistory#\n";
 	}
-	$mysqli->close();
+	return $id;
 }
 
 $mysqli = new mysqli("14.39.90.172", "nico", "", "ks", 6306);
@@ -74,9 +63,8 @@ if($mysqli->connect_errno)
 }
 $mysqli->query("set names utf8") or die($mysqli->error);
 
-$xmlstr = file_get_contents("http://www.nicovideo.jp/ranking/fav/daily/dance?rss=2.0&lang=ja-jp");
+$xmlstr = file_get_contents("http://www.nicovideo.jp/ranking/fav/daily/dance?rss=2.0&lang=ja-jp");file_put_contents("./a.xml", $xmlstr);
 //$xmlstr = file_get_contents("./a.xml");
-//file_put_contents("./a.xml", $xmlstr);
 if(!$xmlstr)
 {
 	dir("read error $url");
@@ -86,7 +74,11 @@ echo $xml->channel->title."\n";
 echo $xml->channel->link."\n";
 echo $xml->channel->pubDate."\n";
 
+$u = unserialize(file_get_contents('u'));
+$s = unserialize(file_get_contents('s'));
+
 $n = 0;
+$idx = (int)file_get_contents($idpath);
 foreach($xml->channel->item as $item)
 {
 	$n++;
@@ -139,7 +131,13 @@ foreach($xml->channel->item as $item)
 	}
 
 	echo sprintf("%3d %s %7s %7s %s $title\n", $n, $stat, $pt, $view, $id);
+	if($stat === 'o')
+	{
+		$idx = watch($idx, $id);
+		sleep(4);
+	}
 }
+file_put_contents($idpath, $idx);
 
 $result->free();
 $mysqli->close();
