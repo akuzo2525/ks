@@ -8,6 +8,12 @@ date_default_timezone_set('Asia/Tokyo');
 $start = time();
 //echo date("Y-m-d H:i:s", $start)."\n";
 
+function exception_error_handler($errno, $errstr, $file, $line)
+{
+	throw new ErrorException($errstr, 0, $errno, $file, $line);
+}
+set_error_handler("exception_error_handler");
+
 $mysqli = new mysqli($host, $user, "", $db, $port);
 if(count($argv) >= 2)
 {
@@ -23,17 +29,7 @@ if(count($argv) >= 2)
 			foreach($v as $key)
 			{
 				echo "[$key]\n";
-				$vmap[$key] = false;
 			}
-			$vmap['sm32563463'] = true;
-			echo "\n";
-			$tmp = array();
-			foreach($vmap as $key=>$val)
-			{
-				echo "[$key:$val]\n";
-				if($val == true)$tmp[] = $key;
-			}
-			file_put_contents('v', serialize($tmp));
 			break;
 		case 'v':
 			$result = $mysqli->query("SELECT video_id FROM $tb WHERE flag&$flag");
@@ -80,11 +76,9 @@ $rnd = isset($_POST['rnd']);
 
 {
 	$v = unserialize(file_get_contents('v'));
-	$n = count($v);
 	$u = unserialize(file_get_contents('u'));
 	$s = unserialize(file_get_contents('s'));
 
-//	echo "cnt=$n\n";
 //	foreach($v as $val)echo $val."\n";
 //	foreach($u as $val)echo sprintf("%s:%s\n", $val['m'], $val['p']);
 //	foreach($s as $val)echo sprintf("%s:%2d:%d\n", $val['s'], $val['c'], $val['t']);
@@ -107,15 +101,16 @@ for($i = 0; $i < $cnt; $i++)
 	{
 		$user_session = $s[$id]['s'];
 		$mail = $u[$id]['m'];
-		$video_id = $v[rand(0, $n-1)];
+		$idx = rand(0, count($v)-1);
+		$video_id = $v[$idx];
 		$diff = (time()-$s[$id]['t'])/60/60;
-		if(get_nicohistory($video_id, $user_session) === false)
+		if(get_nicohistory($idx, $video_id, $user_session) === false)
 		{
 			if($diff/24 >= 24)
 			{
 				$password = $u[$id]['p'];
 				$user_session = login($mail, $password);
-				if(get_nicohistory($video_id, $user_session) === false)
+				if(get_nicohistory($idx, $video_id, $user_session) === false)
 				{
 					echo "login error $id:$mail\n";
 					break;

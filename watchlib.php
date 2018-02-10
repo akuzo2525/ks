@@ -1,11 +1,24 @@
 <?php
 
-function get_nicohistory($video_id, $user_session)
+function get_nicohistory($idx, $video_id, $user_session)
 {
+	global $v;
+
 	$url = "http://nicovideo.jp/watch/$video_id";
 	$options = array('http'=>array('method'=>"HEAD", 'header'=>"Accept-language: ja\r\nCookie: user_session=$user_session\r\n"));
 	$context = stream_context_create($options);
-	$data = file_get_contents($url, false, $context);
+	try
+	{
+		$data = file_get_contents($url, false, $context);
+	}
+	catch(Exception $e)
+	{
+		$v[$idx] = $v[count($v)-1];
+		array_pop($v);
+		file_put_contents('v', serialize($v));
+		echo "remove $video_id\n";
+		return true;
+	}
 
 	$logined = false;
 	foreach($http_response_header as $header)
