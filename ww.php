@@ -31,6 +31,15 @@ if(count($argv) >= 2)
 				echo "[$key]\n";
 			}
 			break;
+		case 'vu':
+			$u = unserialize(file_get_contents('u'));
+			$s = unserialize(file_get_contents('s'));
+			$cnt = count($u);
+			for($i = 0; $i < $cnt; $i++)
+			{
+				echo sprintf("%2d %s %2d [%s] %s\n", $i, $s[$i]['s'], $s[$i]['c'], date("m-d H:i:s", $s[$i]['t']), $u[$i]['m']);
+			}
+			break;
 		case 'v':
 			$result = $mysqli->query("SELECT video_id FROM $tb WHERE flag&$flag");
 			$v = array();
