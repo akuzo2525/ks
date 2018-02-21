@@ -15,7 +15,7 @@ function exception_error_handler($errno, $errstr, $file, $line)
 set_error_handler("exception_error_handler");
 
 $mysqli = new mysqli($host, $user, "", $db, $port);
-if(count($argv) >= 2)
+if(isset($argv) && count($argv) >= 2)
 {
 	for($i = 1; $i < count($argv); $i++)
 	{
@@ -96,7 +96,7 @@ $rnd = isset($_POST['rnd']);
 
 if($rnd === true)
 {
-	$id = rand($min, $max);
+	$id = rand(0, count($s)-1);
 }
 else
 {
@@ -115,7 +115,6 @@ for($i = 0; $i < $cnt; $i++)
 		$diff = (time()-$s[$id]['t'])/60/60;
 		if(get_nicohistory($idx, $video_id, $user_session) === false)
 		{
-			if($diff/24 >= 24)
 			{
 				$password = $u[$id]['p'];
 				$user_session = login($mail, $password);
@@ -130,10 +129,6 @@ for($i = 0; $i < $cnt; $i++)
 				file_put_contents('s', serialize($s));
 				echo "login $id:$mail\n";
 				break;
-			}
-			else
-			{
-				$video_id = 'skip';
 			}
 		}
 		echo sprintf("%2d %s(%+3d) %-10s %3d(%2d:%02d) %16s\n", $i, date("H:i:s"), time()-$start, $video_id, $id, $diff/24, $diff%24, $mail);
