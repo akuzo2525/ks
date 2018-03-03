@@ -25,7 +25,7 @@ function get_nicohistory($idx, $video_id, $user_session)
 	{
 		if(preg_match("(Set-Cookie: nicohistory=.+?;)", $header, $matches) === 1)
 		{
-			return true;
+//			return true;
 		}
 		if(preg_match("/x-niconico-id:\s*\d+/", $header, $matches) === 1)
 		{
