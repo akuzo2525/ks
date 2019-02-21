@@ -4,7 +4,7 @@ function get_nicohistory($idx, $video_id, $user_session)
 {
 	global $v;
 
-	$url = "http://nicovideo.jp/watch/$video_id";
+	$url = "https://www.nicovideo.jp/watch/$video_id";
 	$options = array('http'=>array('method'=>"HEAD", 'header'=>"Accept-language: ja\r\nCookie: user_session=$user_session\r\n"));
 	$context = stream_context_create($options);
 	try
