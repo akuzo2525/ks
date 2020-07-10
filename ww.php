@@ -14,7 +14,7 @@ function exception_error_handler($errno, $errstr, $file, $line)
 }
 set_error_handler("exception_error_handler");
 
-$mysqli = new mysqli($host, $user, "", $db, $port);
+$mysqli = new mysqli($host, $user, $pass, $db, $port);
 if(isset($argv) && count($argv) >= 2)
 {
 	for($i = 1; $i < count($argv); $i++)
